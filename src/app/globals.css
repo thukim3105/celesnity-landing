@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/* Class-based dark mode so the theme toggle can switch manually */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* ── Responsive layout rail ─────────────────────────────────────
+     The page reserves a left gutter for the decorative scroll-comet and
+     the star section-nav. `--gutter` is the content inset; `--rail` is the
+     centre-line of the comet/stars. Defined once here so the gutter
+     (main, footer), the hero's full-bleed breakout, and the rail markers
+     (ScrollProgress, SectionNav) can never drift out of alignment.
+     Values match the original design exactly (gutter = pl-16/pl-24,
+     rail = left-10/left-16) so the comet + stars sit where they always did;
+     the variables only remove the previous 5-way duplication. */
+  --gutter: 3rem; /* 48px — narrower rail on phones */
+  --rail: 1.5rem; /* 24px — stars/comet closer to the edge */
+}
+
+@media (min-width: 640px) {
+  :root {
+    --gutter: 6rem; /* 96px — sm and up (was sm:pl-24) */
+    --rail: 4rem; /* 64px — (was sm:left-16) */
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* ── Brand palette ──────────────────────────────────────────────
+     Tokenised from the colours previously hardcoded as raw hex across
+     the components. Available as utilities (text-brand, bg-brand-deep,
+     etc.) for incremental adoption; existing literals stay valid. */
+  --color-brand: #4fc3ff; /* sky — primary CTA / accents */
+  --color-brand-cyan: #00bfff; /* cyan glow */
+  --color-brand-blue: #0066ff; /* deep ray blue */
+  --color-brand-link: #0091d6; /* hover link (light) */
+  --color-brand-deep: #04091e; /* page background */
+  --color-brand-panel: #071436; /* translucent panels */
+  --color-brand-card: #050e2a; /* stat card surface */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #04091e;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Hide the scrollbar (WebKit/Blink) while keeping scroll functional */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Firefox / standards */
+html {
+  scrollbar-width: none;
+  /* Belt-and-braces: never allow a horizontal scrollbar from sub-pixel
+     overflow or full-bleed breakouts. `clip` (not `hidden`) avoids creating
+     a scroll container, so sticky/fixed positioning and scroll-snap still work. */
+  overflow-x: clip;
+}
+
+/* Section snapping — when scrolling comes to rest near a section, it snaps so
+   the section fills the screen (no "half of section 2, half of section 3").
+   `proximity` (not `mandatory`) is deliberate: section 03 is a tall pinned
+   scroll (PinnedStack) that must be scrolled through freely, and mandatory snap
+   would trap it. The CTA is excluded so it flows freely into the footer.
+
+   Gated to mouse/trackpad devices only (`hover` + fine `pointer`). On touch
+   devices the sections are often taller than the viewport, where the snap engine
+   interrupts a programmatic smooth-scroll (e.g. tapping a star in the section
+   rail) and yanks the page back to where it started. Free scrolling on touch
+   avoids that entirely. */
+@media (hover: hover) and (pointer: fine) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+
+  main > section {
+    scroll-snap-align: start;
+  }
+
+  main > section#sec-cta {
+    scroll-snap-align: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-snap-type: none;
+  }
+}
+
+/* Comet head sparkle animations */
+@keyframes comet-twinkle {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+@keyframes comet-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Irregular sparkle flicker for the star */
+@keyframes comet-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0.82;
+  }
+  34% {
+    opacity: 1;
+  }
+  52% {
+    opacity: 0.68;
+  }
+  68% {
+    opacity: 0.95;
+  }
+  84% {
+    opacity: 0.8;
+  }
+}
+
+/* Embers that break off the head and fall downward */
+@keyframes comet-fall-spark {
+  0% {
+    transform: translate(-50%, -6px) scale(1);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 54px) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comet-twinkle,
+  .comet-spin,
+  .comet-flicker,
+  .comet-fall-spark {
+    animation: none !important;
+  }
+}
+
+/* Infinite right-to-left ticker. The track holds two copies of the items, so
+   shifting it by -50% loops seamlessly. */
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-track {
+  animation: ticker var(--ticker-duration, 45s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+}
+
+/* Network graph (section 03) — hide the travelling data packets for users who
+   prefer reduced motion; the static nodes and wires remain. */
+@media (prefers-reduced-motion: reduce) {
+  .net-dot {
+    display: none;
+  }
+}
+
+/* Minder AI projector — flash that fills a video stage on activation */
+@keyframes minder-flash {
+  0% { opacity: 0; }
+  35% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[minder-flash_600ms_ease-out_forwards\] { animation: none !important; }
+}

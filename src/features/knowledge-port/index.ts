@@ -1,0 +1,1 @@
+export { KnowledgePort } from "./KnowledgePort";
