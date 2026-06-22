@@ -8,8 +8,8 @@ export const menu: MenuItem[] = [
   // route. The scroll-spy still lights this item via the sec-hero HOME_MARKER.
   { label: "About Us", href: "/" },
   { label: "Minder AI", href: "/minder-ai" },
-  { label: "Solutions", items: ["Manufacturing", "Logistics", "Field Service"] },
-  { label: "Resources", items: ["Documentation", "Guides", "Blog"] },
+  { label: "Solutions", items: ["Manufacturing", "Logistics", "Energy"] },
+  { label: "Resources", items: ["Blog", "Case Studies", "Guides", "Glossary"] },
   { label: "Contact", href: "/coming-soon?from=Contact", comingSoon: true },
 ];
 
