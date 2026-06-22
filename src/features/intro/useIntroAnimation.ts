@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clamp01, easeInOut, easeInOutQuart } from "@/lib/animation/easing";
-import { T_FLYREVEAL, T_HOLD, T_SWEEP } from "./constants";
+import { REPLAY_INTRO_EVENT, T_FLYREVEAL, T_HOLD, T_SWEEP } from "./constants";
 
 /**
  * Drives the intro overlay: a spark sweeps across the screen revealing the
@@ -13,6 +13,9 @@ import { T_FLYREVEAL, T_HOLD, T_SWEEP } from "./constants";
  */
 export function useIntroAnimation() {
   const [show, setShow] = useState(true);
+  // Bumped to re-run the animation effect; the overlay replays from the top
+  // (e.g. when "About Us" is clicked again — see REPLAY_INTRO_EVENT).
+  const [playId, setPlayId] = useState(0);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null); // centred word box (flown to logo)
@@ -20,6 +23,20 @@ export function useIntroAnimation() {
 
   // Click anywhere to skip — flipped by the skip handler, read in the loop.
   const skipRef = useRef(false);
+
+  const replay = useCallback(() => {
+    skipRef.current = false;
+    setShow(true);
+    setPlayId((n) => n + 1);
+  }, []);
+
+  // Re-trigger on the replay event (dispatched by the navbar's "About Us" tab
+  // when we're already on the home page, so no remount would otherwise occur).
+  useEffect(() => {
+    const onReplay = () => replay();
+    window.addEventListener(REPLAY_INTRO_EVENT, onReplay);
+    return () => window.removeEventListener(REPLAY_INTRO_EVENT, onReplay);
+  }, [replay]);
 
   useEffect(() => {
     // Reduced motion: don't animate. The overlay itself is removed in the
@@ -144,7 +161,7 @@ export function useIntroAnimation() {
       cancelAnimationFrame(raf);
       window.clearTimeout(safety);
     };
-  }, []);
+  }, [playId]);
 
   const onSkip = () => {
     skipRef.current = true;

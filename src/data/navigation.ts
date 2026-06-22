@@ -6,7 +6,7 @@ export const menu: MenuItem[] = [
   { label: "Minder AI", href: "/minder-ai" },
   { label: "Solutions", items: ["Manufacturing", "Logistics", "Field Service"] },
   { label: "Resources", items: ["Documentation", "Guides", "Blog"] },
-  { label: "Contact", href: "/#sec-08" },
+  { label: "Contact", href: "/#sec-cta" },
 ];
 
 /** Selectable interface languages in the navbar. */
