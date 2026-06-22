@@ -5,7 +5,10 @@ import { DEVICE_KEYS, buildDeviceGroup } from "./device-geometries";
 import { NODES, VW, VH } from "./network-data";
 
 // How many viewBox units the normalized (unit-size) icon should span.
-const ICON_WORLD = 46;
+const ICON_WORLD = 78;
+// Gentle rock instead of a full spin: the recognizable face stays toward the
+// viewer, swinging ±ROCK radians so the shape still reads as 3D.
+const ROCK = 0.5;
 
 /**
  * Six holographic device icons drawn on one transparent canvas, aligned to the
@@ -32,7 +35,12 @@ export function DeviceIcons3D({ className = "" }: { className?: string }) {
     let camera: import("three").OrthographicCamera | null = null;
     let io: IntersectionObserver | null = null;
     let ro: ResizeObserver | null = null;
-    const spinners: { group: import("three").Object3D; speed: number }[] = [];
+    let clock = 0;
+    const spinners: {
+      group: import("three").Object3D;
+      rate: number;
+      phase: number;
+    }[] = [];
 
     function render() {
       if (renderer && scene && camera) renderer.render(scene, camera);
@@ -42,7 +50,10 @@ export function DeviceIcons3D({ className = "" }: { className?: string }) {
       if (disposed) return;
       const dt = last ? (t - last) / 1000 : 0;
       last = t;
-      for (const s of spinners) s.group.rotation.y += s.speed * dt;
+      clock += dt;
+      for (const s of spinners) {
+        s.group.rotation.y = ROCK * Math.sin(clock * s.rate + s.phase);
+      }
       render();
       raf = requestAnimationFrame(frame);
     }
@@ -91,9 +102,9 @@ export function DeviceIcons3D({ className = "" }: { className?: string }) {
         const g = buildDeviceGroup(THREE, key);
         g.scale.multiplyScalar(ICON_WORLD); // unit-size -> viewBox units
         g.position.set(node.x - VW / 2, VH / 2 - node.y, 0);
-        g.rotation.x = 0.35; // slight tilt so depth reads even at rest
+        g.rotation.x = 0.18; // slight tilt so depth reads even at rest
         scene!.add(g);
-        spinners.push({ group: g, speed: 0.5 + (i % 3) * 0.18 });
+        spinners.push({ group: g, rate: 0.7 + (i % 3) * 0.12, phase: i * 0.9 });
       });
 
       fit();
