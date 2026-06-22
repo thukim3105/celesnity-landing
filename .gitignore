@@ -45,5 +45,7 @@ next-env.d.ts
 
 # local media & screenshots
 *.mp4
+# ...but keep videos served from /public (e.g. the Minder AI intro)
+!/public/videos/*.mp4
 Screenshot*.png
 Untitled.png

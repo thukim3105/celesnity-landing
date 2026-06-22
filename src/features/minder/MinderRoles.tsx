@@ -30,10 +30,7 @@ function RolePanel({
     <section id={role.id} className="flex min-h-svh items-center px-6 py-16 sm:py-24 snap-start">
       <div className="mx-auto grid w-full max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-16">
         <div className={mediaRight ? "md:order-1" : "md:order-2"}>
-          <Eyebrow className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand shadow-[0_0_8px] shadow-brand/70" />
-            {role.eyebrow}
-          </Eyebrow>
+          <Eyebrow>{role.eyebrow}</Eyebrow>
           <h2 className="mt-4 text-3xl font-bold leading-[1.1] tracking-tight sm:text-4xl md:text-5xl" style={unnaFont}>
             {role.heading.pre}
             {role.heading.em}
