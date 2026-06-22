@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import { EDGES, ICONS, NODES } from "./network-data";
+import { EDGES, NODES, VW, VH } from "./network-data";
+import { DeviceIcons3D } from "./DeviceIcons3D";
 
 // An "intelligence network": MINDER AI sits at the centre as a glowing wordmark
 // hub; six device endpoints orbit it as line-icon chips, each wired back to the
@@ -7,12 +8,8 @@ import { EDGES, ICONS, NODES } from "./network-data";
 // travelling dots are hidden under prefers-reduced-motion via the `.net-dot`
 // rule in globals.css. Server component.
 
-const VW = 1040;
-const VH = 460;
 const NH = 38; // hub pill height
 const R = 34; // device chip radius
-const ICON = 40; // device icon size (24-unit viewBox scaled to this)
-const ISCALE = ICON / 24;
 
 // Hub pill width estimated from label length.
 const nodeWidth = (label: string) => Math.max(64, label.length * 9.2 + 34);
@@ -21,12 +18,13 @@ export function NetworkGraph({ className = "" }: { className?: string }) {
   const font: CSSProperties = { fontFamily: "var(--font-poppins)" };
 
   return (
-    <svg
-      viewBox={`0 0 ${VW} ${VH}`}
-      className={className}
-      role="img"
-      aria-label="Six devices — Laptop, Tablet, Smart Glasses, Mobile, Desktop and Wearables — all connect inward to the central MINDER AI hub."
-    >
+    <div className={`relative ${className}`}>
+      <svg
+        viewBox={`0 0 ${VW} ${VH}`}
+        className="block h-auto w-full"
+        role="img"
+        aria-label="Six devices — Laptop, Tablet, Smart Glasses, Mobile, Desktop and Wearables — all connect inward to the central MINDER AI hub."
+      >
       <defs>
         {/* Coloured glow behind the hub, keeping its shape crisp. */}
         <filter id="net-root-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -123,31 +121,23 @@ export function NetworkGraph({ className = "" }: { className?: string }) {
         );
       })()}
 
-      {/* Device endpoints — line-icon chips (no labels). */}
+      {/* Device endpoints — chip circles only; the icons themselves are drawn
+          as 3D holograms by the <DeviceIcons3D> overlay. */}
       {Object.entries(NODES)
         .filter(([, n]) => !n.root)
         .map(([key, n]) => (
-          <g key={key}>
-            <circle
-              cx={n.x}
-              cy={n.y}
-              r={R}
-              fill="#0b1d4d"
-              stroke="rgba(79,195,255,0.45)"
-              strokeWidth={1.2}
-            />
-            <g
-              transform={`translate(${n.x - 12 * ISCALE} ${n.y - 12 * ISCALE}) scale(${ISCALE})`}
-              fill="none"
-              stroke="#cfeeff"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {ICONS[key]}
-            </g>
-          </g>
+          <circle
+            key={key}
+            cx={n.x}
+            cy={n.y}
+            r={R}
+            fill="#0b1d4d"
+            stroke="rgba(79,195,255,0.45)"
+            strokeWidth={1.2}
+          />
         ))}
-    </svg>
+      </svg>
+      <DeviceIcons3D className="pointer-events-none absolute inset-0 h-full w-full" />
+    </div>
   );
 }
