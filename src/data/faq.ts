@@ -28,6 +28,11 @@ export const faqs: FaqItem[] = [
       "While general-purpose LLMs provide a foundation, Minder adds multimodal grounding through camera feeds, action execution within systems of record, procedural memory tailored to your workflows, hardware optimization, and a deployment model built specifically for industrial environments.",
   },
   {
+    question: "How does Minder compare to traditional Connected Worker Platforms (CWPs)?",
+    answer:
+      "Traditional CWPs and Minder overlap on the basics — digital SOPs, worker training, checklists, and incident reporting — but a CWP delivers them as static documents and search, while Minder makes the same work conversational, real-time, and contextual. Where Minder pulls ahead is its core: voice-first knowledge access, tribal-knowledge capture, multilingual frontline support, and AI reasoning over your live site context. Hands-free smart-glasses workflows are where it becomes a genuine differentiator rather than a feature checkbox.",
+  },
+  {
     question: "What does pricing look like?",
     answer:
       "Pricing is offered on a per-seat basis for coach and assistant roles, with site-license options available for agent usage connected to systems of record. Pilot programs are structured to demonstrate value before any long-term seat commitment. Contact the team for a quote tailored to your operation.",
