@@ -1,21 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clamp01, easeInOut, easeInOutQuart } from "@/lib/animation/easing";
-import { REPLAY_INTRO_EVENT, T_FLYREVEAL, T_HOLD, T_SWEEP } from "./constants";
+import { T_FLYREVEAL, T_HOLD, T_SWEEP } from "./constants";
+
+/**
+ * Whether the intro has already played in this app session. Module scope, so it
+ * survives client-side route changes (e.g. About Us → Minder AI → About Us) but
+ * resets on a full page reload. Once true, the overlay is skipped and the hero
+ * shows immediately.
+ */
+let introPlayed = false;
 
 /**
  * Drives the intro overlay: a spark sweeps across the screen revealing the
  * "Celesnity" wordmark in its wake, the word holds for a beat, then flies into
  * the navbar wordmark slot (#brand-wordmark) while the overlay fades to reveal
- * the page. Skippable on click; respects prefers-reduced-motion (skips
- * entirely). Returns the `show` flag, the element refs, and a skip handler.
+ * the page. Plays once per session (see {@link introPlayed}). Skippable on
+ * click; respects prefers-reduced-motion (skips entirely). Returns the `show`
+ * flag, the element refs, and a skip handler.
  */
 export function useIntroAnimation() {
-  const [show, setShow] = useState(true);
-  // Bumped to re-run the animation effect; the overlay replays from the top
-  // (e.g. when "About Us" is clicked again — see REPLAY_INTRO_EVENT).
-  const [playId, setPlayId] = useState(0);
+  // Show only on the first render of the session; on later visits to the home
+  // page (after navigating away and back) the intro is skipped.
+  const [show, setShow] = useState(() => !introPlayed);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null); // centred word box (flown to logo)
@@ -24,21 +32,11 @@ export function useIntroAnimation() {
   // Click anywhere to skip — flipped by the skip handler, read in the loop.
   const skipRef = useRef(false);
 
-  const replay = useCallback(() => {
-    skipRef.current = false;
-    setShow(true);
-    setPlayId((n) => n + 1);
-  }, []);
-
-  // Re-trigger on the replay event (dispatched by the navbar's "About Us" tab
-  // when we're already on the home page, so no remount would otherwise occur).
   useEffect(() => {
-    const onReplay = () => replay();
-    window.addEventListener(REPLAY_INTRO_EVENT, onReplay);
-    return () => window.removeEventListener(REPLAY_INTRO_EVENT, onReplay);
-  }, [replay]);
+    // Already played this session (e.g. came back from another page): nothing to
+    // animate — the overlay isn't rendered and the hero is already visible.
+    if (introPlayed) return;
 
-  useEffect(() => {
     // Reduced motion: don't animate. The overlay itself is removed in the
     // component (see IntroOverlay) via useReducedMotion, so there is nothing to
     // tear down here.
@@ -50,6 +48,12 @@ export function useIntroAnimation() {
     const wrap = wrapRef.current;
     const streak = streakRef.current;
     if (!overlay || !wrap || !streak) return;
+
+    // Mark as played once the animation has finished (and tear the overlay down).
+    const finish = () => {
+      introPlayed = true;
+      setShow(false);
+    };
 
     // The intro always plays from the hero, so start at the very top. Disabling
     // the browser's scroll restoration stops it from jumping back to a previous
@@ -146,7 +150,7 @@ export function useIntroAnimation() {
         }
         overlay.style.opacity = `${1 - Math.pow(p, 3)}`;
       } else {
-        setShow(false);
+        finish();
         return;
       }
       raf = requestAnimationFrame(frame);
@@ -155,13 +159,13 @@ export function useIntroAnimation() {
 
     // Safety net: guarantee the overlay tears down even if rAF stalls (e.g. the
     // tab is backgrounded mid-intro), so it can never linger and block the page.
-    const safety = window.setTimeout(() => setShow(false), END + 800);
+    const safety = window.setTimeout(finish, END + 800);
 
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(safety);
     };
-  }, [playId]);
+  }, []);
 
   const onSkip = () => {
     skipRef.current = true;

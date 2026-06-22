@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { menu, languages } from "@/data";
-import { REPLAY_INTRO_EVENT } from "@/features/intro";
 import { useDismiss, useScrollSpy } from "@/hooks";
 import { ChevronIcon, MenuIcon } from "@/components/ui/icons";
 import { NavDropdown, NavDropdownLink } from "./NavDropdown";
@@ -53,13 +52,6 @@ export function Navbar() {
   const selectHomeMarker = (label: string) => {
     const idx = HOME_MARKERS.findIndex((m) => m.label === label);
     if (idx >= 0) setActive(idx);
-  };
-
-  // "About Us" points at the hero; replay the intro overlay whenever it's
-  // clicked (on the home page this is a same-route hash nav that wouldn't
-  // otherwise remount the overlay; off-route, the fresh mount plays it anyway).
-  const onNavLinkClick = (href?: string) => {
-    if (href === "/#sec-hero") window.dispatchEvent(new Event(REPLAY_INTRO_EVENT));
   };
 
   useDismiss(navRef, () => setOpen(null));
@@ -134,7 +126,6 @@ export function Navbar() {
                       href={m.href ?? "/"}
                       onClick={() => {
                         selectHomeMarker(m.label);
-                        onNavLinkClick(m.href);
                         setOpen(null);
                       }}
                       className={`${navItem} block ${isActive ? activeItemCls : ""}`}
@@ -225,7 +216,6 @@ export function Navbar() {
                     href={m.href ?? "/"}
                     onClick={() => {
                       selectHomeMarker(m.label);
-                      onNavLinkClick(m.href);
                       closeMobile();
                     }}
                     className="flex min-h-12 items-center px-2 text-base rounded transition-colors hover:text-brand-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset dark:hover:text-[#4FC3FF]"
