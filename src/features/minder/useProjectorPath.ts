@@ -7,7 +7,6 @@ import { dockProgress } from "./projector";
 interface Args {
   overlayRef: React.RefObject<HTMLDivElement | null>;
   stageRefs: React.MutableRefObject<(HTMLElement | null)[]>;
-  pathRef: React.RefObject<SVGPathElement | null>;
   mobile: boolean;
 }
 
@@ -16,6 +15,34 @@ interface Result {
   size: { w: number; h: number };
   dockDistances: number[];
   dockProgresses: number[];
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/**
+ * An off-screen, measurable SVG path for `d`, plus a `cleanup` to remove it.
+ * We measure against a path we build from the freshly computed `d` string —
+ * never the rendered `<path>`, whose `d` lags one React commit behind (on first
+ * mount it is still empty, which would collapse every dock distance to 0% and
+ * freeze the orb). Attached to a hidden `<svg>` so `getTotalLength` is reliable
+ * across browsers.
+ */
+function makeMeasurablePath(d: string): { path: SVGPathElement; cleanup: () => void } {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("aria-hidden", "true");
+  Object.assign(svg.style, {
+    position: "absolute",
+    width: "0",
+    height: "0",
+    left: "-9999px",
+    top: "0",
+    overflow: "hidden",
+  });
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", d);
+  svg.appendChild(path);
+  document.body.appendChild(svg);
+  return { path, cleanup: () => svg.remove() };
 }
 
 /** Sample the path at 240 points and return the offset-distance % nearest `pt`. */
@@ -36,7 +63,7 @@ function distancePercentAt(path: SVGPathElement, pt: Pt, total: number): number 
   return (bestLen / total) * 100;
 }
 
-export function useProjectorPath({ overlayRef, stageRefs, pathRef, mobile }: Args): Result {
+export function useProjectorPath({ overlayRef, stageRefs, mobile }: Args): Result {
   const [result, setResult] = useState<Result>({
     pathD: "",
     size: { w: 0, h: 0 },
@@ -48,11 +75,7 @@ export function useProjectorPath({ overlayRef, stageRefs, pathRef, mobile }: Arg
     const overlay = overlayRef.current;
     if (!overlay) return;
 
-    let rafId = 0;
-
     const measure = () => {
-      cancelAnimationFrame(rafId);
-
       const o = overlay.getBoundingClientRect();
       const w = o.width;
       const h = o.height;
@@ -75,18 +98,20 @@ export function useProjectorPath({ overlayRef, stageRefs, pathRef, mobile }: Arg
 
       const pathD = buildSCurvePath(localPts);
 
-      // dock distances need the rendered path; defer one frame so pathRef updates.
-      rafId = requestAnimationFrame(() => {
-        const path = pathRef.current;
-        const total = path ? path.getTotalLength() : 0;
-        const dockDistances = path
+      // Measure against a path built from this exact `pathD` — not the rendered
+      // node, whose `d` is one commit stale (empty on first mount).
+      const { path, cleanup } = makeMeasurablePath(pathD);
+      const total = path.getTotalLength();
+      const dockDistances =
+        total > 0
           ? localPts.map((p) => distancePercentAt(path, p, total))
           : localPts.map((_, i) => (i / Math.max(1, localPts.length - 1)) * 100);
-        const dockProgresses = centerDocYs.map((y) =>
-          dockProgress(y, containerTop, h, viewportH),
-        );
-        setResult({ pathD, size: { w, h }, dockDistances, dockProgresses });
-      });
+      cleanup();
+
+      const dockProgresses = centerDocYs.map((y) =>
+        dockProgress(y, containerTop, h, viewportH),
+      );
+      setResult({ pathD, size: { w, h }, dockDistances, dockProgresses });
     };
 
     measure();
@@ -94,7 +119,6 @@ export function useProjectorPath({ overlayRef, stageRefs, pathRef, mobile }: Arg
     ro.observe(overlay);
     window.addEventListener("resize", measure);
     return () => {
-      cancelAnimationFrame(rafId);
       ro.disconnect();
       window.removeEventListener("resize", measure);
     };

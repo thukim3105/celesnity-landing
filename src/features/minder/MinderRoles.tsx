@@ -80,7 +80,6 @@ export function MinderRoles() {
   const { pathD, size, dockDistances, dockProgresses } = useProjectorPath({
     overlayRef,
     stageRefs,
-    pathRef,
     mobile,
   });
 
