@@ -29,7 +29,7 @@ export const minderRoles: MinderRole[] = [
     id: "sec-minder",
     eyebrow: "AI Coach",
     accent: "#4FC3FF",
-    videoSrc: "/videos/celesnity-intro.mp4",
+    videoSrc: "/videos/intro.mp4",
     heading: {
       pre: "Trains new hires ",
       em: "from day one",
@@ -47,7 +47,7 @@ export const minderRoles: MinderRole[] = [
     id: "minder-assistant",
     eyebrow: "AI Assistant",
     accent: "#5EEAD4",
-    videoSrc: "/videos/celesnity-intro.mp4",
+    videoSrc: "/videos/intro.mp4",
     heading: {
       pre: "Spots defects ",
       em: "before",
@@ -65,7 +65,7 @@ export const minderRoles: MinderRole[] = [
     id: "minder-agent",
     eyebrow: "AI Agent",
     accent: "#86EFAC",
-    videoSrc: "/videos/celesnity-intro.mp4",
+    videoSrc: "/videos/intro.mp4",
     heading: {
       pre: "Closes the loop ",
       em: "with your systems of record.",
