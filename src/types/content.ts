@@ -50,11 +50,13 @@ export interface WorkflowStep {
   description: string;
 }
 
-/** A top-nav menu entry. `items` makes it a dropdown; `href` makes it a link. */
+/** A top-nav menu entry. `items` makes it a dropdown; `href` makes it a link.
+ *  `comingSoon` marks a link whose destination isn't built yet. */
 export interface MenuItem {
   label: string;
   href?: string;
   items?: string[];
+  comingSoon?: boolean;
 }
 
 /** A selectable interface language. */

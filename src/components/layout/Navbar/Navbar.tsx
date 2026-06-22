@@ -22,10 +22,7 @@ const activeItemCls =
 // In-page anchors on the home page ("/"). Their section is observed by the
 // scroll-spy so the matching nav item lights up as you scroll. Route links like
 // "Minder AI" (its own page) are handled by pathname instead — see below.
-const HOME_MARKERS = [
-  { id: "sec-hero", label: "About Us" },
-  { id: "sec-cta", label: "Contact" },
-];
+const HOME_MARKERS = [{ id: "sec-hero", label: "About Us" }];
 const NO_MARKERS: typeof HOME_MARKERS = [];
 
 export function Navbar() {
@@ -114,7 +111,10 @@ export function Navbar() {
                       {open === m.label && (
                         <NavDropdown className="left-1/2 -translate-x-1/2">
                           {m.items.map((it) => (
-                            <NavDropdownLink key={it} href="#">
+                            <NavDropdownLink
+                              key={it}
+                              href={`/coming-soon?from=${encodeURIComponent(it)}`}
+                            >
                               {it}
                             </NavDropdownLink>
                           ))}
@@ -199,13 +199,13 @@ export function Navbar() {
                       <ul className="flex flex-col pb-1 pl-3">
                         {m.items.map((it) => (
                           <li key={it}>
-                            <a
-                              href="#"
+                            <Link
+                              href={`/coming-soon?from=${encodeURIComponent(it)}`}
                               onClick={closeMobile}
                               className="flex min-h-11 items-center px-2 text-sm text-zinc-600 rounded transition-colors hover:text-brand-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset dark:text-white/70 dark:hover:text-[#4FC3FF]"
                             >
                               {it}
-                            </a>
+                            </Link>
                           </li>
                         ))}
                       </ul>
