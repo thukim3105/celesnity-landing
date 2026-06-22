@@ -3,13 +3,13 @@ import { EDGES, NODES, VW, VH } from "./network-data";
 import { DeviceIcons3D } from "./DeviceIcons3D";
 
 // An "intelligence network": MINDER AI sits at the centre as a glowing wordmark
-// hub; six device endpoints orbit it as line-icon chips, each wired back to the
-// hub with glowing packets flowing both ways. Pure SVG so it scales crisply; the
-// travelling dots are hidden under prefers-reduced-motion via the `.net-dot`
-// rule in globals.css. Server component.
+// hub; six device endpoints orbit it as 3D holographic icons (drawn by the
+// <DeviceIcons3D> overlay), each wired back to the hub with glowing packets
+// flowing both ways. Pure SVG so it scales crisply; the travelling dots are
+// hidden under prefers-reduced-motion via the `.net-dot` rule in globals.css.
+// Server component.
 
 const NH = 38; // hub pill height
-const R = 34; // device chip radius
 
 // Hub pill width estimated from label length.
 const nodeWidth = (label: string) => Math.max(64, label.length * 9.2 + 34);
@@ -121,21 +121,8 @@ export function NetworkGraph({ className = "" }: { className?: string }) {
         );
       })()}
 
-      {/* Device endpoints — chip circles only; the icons themselves are drawn
-          as 3D holograms by the <DeviceIcons3D> overlay. */}
-      {Object.entries(NODES)
-        .filter(([, n]) => !n.root)
-        .map(([key, n]) => (
-          <circle
-            key={key}
-            cx={n.x}
-            cy={n.y}
-            r={R}
-            fill="#0b1d4d"
-            stroke="rgba(79,195,255,0.45)"
-            strokeWidth={1.2}
-          />
-        ))}
+      {/* Device endpoints are drawn as 3D holograms by the <DeviceIcons3D>
+          overlay below — no SVG chip circles. */}
       </svg>
       <DeviceIcons3D className="pointer-events-none absolute inset-0 h-full w-full" />
     </div>

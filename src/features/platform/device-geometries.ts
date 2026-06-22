@@ -21,16 +21,15 @@ export const DEVICE_KEYS: readonly DeviceKey[] = [
 
 const CYAN = 0x4fc3ff;
 
-/** Turn a solid geometry into a cyan edge outline plus a faint additive glow. */
-function edgePair(T: ThreeNS, geo: THREE.BufferGeometry): THREE.LineSegments[] {
-  const eg = new T.EdgesGeometry(geo, 25);
-  geo.dispose();
+/** Wrap a line-segments geometry as a bright cyan core plus a faint additive
+ *  glow, returned as two `LineSegments`. */
+function linePair(T: ThreeNS, geo: THREE.BufferGeometry): THREE.LineSegments[] {
   const core = new T.LineSegments(
-    eg,
+    geo,
     new T.LineBasicMaterial({ color: CYAN, transparent: true, opacity: 0.95 }),
   );
   const glow = new T.LineSegments(
-    eg,
+    geo,
     new T.LineBasicMaterial({
       color: CYAN,
       transparent: true,
@@ -43,6 +42,29 @@ function edgePair(T: ThreeNS, geo: THREE.BufferGeometry): THREE.LineSegments[] {
   return [core, glow];
 }
 
+/** Turn a solid geometry into a cyan edge outline plus a faint additive glow. */
+function edgePair(T: ThreeNS, geo: THREE.BufferGeometry): THREE.LineSegments[] {
+  const eg = new T.EdgesGeometry(geo, 25);
+  geo.dispose();
+  return linePair(T, eg);
+}
+
+/** A clean circle outline as a `LineSegments` geometry (pairs of points). Far
+ *  crisper than a torus run through EdgesGeometry, which frays into spokes. */
+function circleGeo(T: ThreeNS, radius: number, segments = 44): THREE.BufferGeometry {
+  const pts: number[] = [];
+  for (let i = 0; i < segments; i++) {
+    const a0 = (i / segments) * Math.PI * 2;
+    const a1 = ((i + 1) / segments) * Math.PI * 2;
+    pts.push(Math.cos(a0) * radius, Math.sin(a0) * radius, 0);
+    pts.push(Math.cos(a1) * radius, Math.sin(a1) * radius, 0);
+  }
+  return new T.BufferGeometry().setAttribute(
+    "position",
+    new T.Float32BufferAttribute(pts, 3),
+  );
+}
+
 /** Add one primitive (as edge + glow) to a group at an optional pose. */
 function part(
   T: ThreeNS,
@@ -53,6 +75,19 @@ function part(
   for (const seg of edgePair(T, geo)) {
     if (opts.pos) seg.position.set(opts.pos[0], opts.pos[1], opts.pos[2]);
     if (opts.rot) seg.rotation.set(opts.rot[0], opts.rot[1], opts.rot[2]);
+    group.add(seg);
+  }
+}
+
+/** Add a crisp circle outline (lens, dial) to a group at an optional pose. */
+function ring(
+  T: ThreeNS,
+  group: THREE.Group,
+  radius: number,
+  opts: { pos?: [number, number, number] } = {},
+): void {
+  for (const seg of linePair(T, circleGeo(T, radius))) {
+    if (opts.pos) seg.position.set(opts.pos[0], opts.pos[1], opts.pos[2]);
     group.add(seg);
   }
 }
@@ -86,16 +121,21 @@ function desktop(T: ThreeNS): THREE.Group {
 
 function smartglasses(T: ThreeNS): THREE.Group {
   const g = new T.Group();
-  part(T, g, new T.TorusGeometry(0.55, 0.09, 8, 20), { pos: [-0.7, 0, 0] }); // left lens
-  part(T, g, new T.TorusGeometry(0.55, 0.09, 8, 20), { pos: [0.7, 0, 0] }); // right lens
-  part(T, g, new T.BoxGeometry(0.5, 0.08, 0.08)); // bridge
+  ring(T, g, 0.5, { pos: [-0.62, 0, 0] }); // left lens
+  ring(T, g, 0.5, { pos: [0.62, 0, 0] }); // right lens
+  part(T, g, new T.BoxGeometry(0.42, 0.05, 0.05), { pos: [0, 0.06, 0] }); // bridge
+  part(T, g, new T.BoxGeometry(0.06, 0.06, 0.85), { pos: [-1.05, 0.05, -0.42] }); // left temple
+  part(T, g, new T.BoxGeometry(0.06, 0.06, 0.85), { pos: [1.05, 0.05, -0.42] }); // right temple
   return g;
 }
 
 function wearables(T: ThreeNS): THREE.Group {
   const g = new T.Group();
-  part(T, g, new T.BoxGeometry(1.1, 1.3, 0.3)); // watch face
-  part(T, g, new T.TorusGeometry(0.75, 0.12, 8, 24)); // band ring
+  part(T, g, new T.BoxGeometry(0.95, 1.05, 0.18)); // watch case
+  ring(T, g, 0.32, { pos: [0, 0, 0.1] }); // dial bezel on the face
+  part(T, g, new T.BoxGeometry(0.1, 0.16, 0.1), { pos: [0.55, 0, 0] }); // crown
+  part(T, g, new T.BoxGeometry(0.62, 0.78, 0.1), { pos: [0, 0.82, 0] }); // top strap
+  part(T, g, new T.BoxGeometry(0.62, 0.78, 0.1), { pos: [0, -0.82, 0] }); // bottom strap
   return g;
 }
 
